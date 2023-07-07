@@ -7,6 +7,7 @@ import pydub
 import wave
 import numpy as np
 import scipy.fftpack as fft
+import scipy.signal as signal
 
 base_path = os.getcwd()
 filename = " ".join(sys.argv[1:])
@@ -45,15 +46,14 @@ for i, e in enumerate(channels):
                                   byteorder='little',
                                   signed=True)
     array = fft.fft(array)
-    array2 = np.empty(length*2, dtype=np.complex128)
-    for i in range(0, length, 1):
-        array2[i*2] = array[i]
-        if i == length-1:
-            array2[i*2+1] = array[i]
-        else:
-            array2[i*2+1] = (array[i]+array[i+1])/2  # average
+    array2 = np.empty(length*2, np.complex128)
+    for j in range(length):
+        array2[j*2] = array[j]
+        if j != length-1:
+            array2[j*2+1] = (array[j]+array[j+1])/2
     array = np.real(fft.ifft(array2)).astype(int)
-    for i in range(0, length, 1):
+    array[array > 2147483647] = 2147483647  # int overflow check
+    for i in range(0, length*2, 1):
         ext.writeframesraw(array[i].item().to_bytes(bits_per_frame,
                                                     byteorder='little',
                                                     signed=True))
