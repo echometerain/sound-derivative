@@ -46,14 +46,16 @@ for i, e in enumerate(channels):
                                   byteorder='little',
                                   signed=True)
     array = fft.fft(array)
-    array2 = np.empty(length*2, np.complex128)
-    for j in range(length):
-        array2[j*2] = array[j]
+    array2 = np.empty(length*3, np.complex128)
+    for j in range(length):  # interpolation
+        array2[j*3] = array[j]
         if j != length-1:
-            array2[j*2+1] = (array[j]+array[j+1])/2
+            array2[j*3+1] = (array[j]+array[j+1])/2
+    array2[length*3-1] = array2[length*3-3]
+    array2[length*3-2] = array2[length*3-3]
     array = np.real(fft.ifft(array2)).astype(int)
     array[array > 2147483647] = 2147483647  # int overflow check
-    for i in range(0, length*2, 1):
+    for i in range(0, length*3, 1):
         ext.writeframesraw(array[i].item().to_bytes(bits_per_frame,
                                                     byteorder='little',
                                                     signed=True))
